@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>a969ccc2-995c-47d8-80f9-c7e87f4a1bc8</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DatabaseViewerModels\**" />
+    <Content Remove="DatabaseViewerModels\**" />
+    <EmbeddedResource Remove="DatabaseViewerModels\**" />
+    <None Remove="DatabaseViewerModels\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="DatabaseViewerModels\DatabaseViewerModels\DatabaseViewerModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
+  </ItemGroup>
+
+</Project>

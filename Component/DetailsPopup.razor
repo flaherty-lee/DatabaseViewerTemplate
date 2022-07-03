@@ -1,0 +1,110 @@
+﻿@using DatabaseViewerModels
+@using System.Text.Json
+@using System.Linq
+@using System.Reflection
+@using System.Collections
+
+@if(@Details != null)
+{
+    <button class="btn btn-primary btn-sm" @onclick="@ModalShow">@Details.GetType().Name Details</button>
+    @if (showModal)
+    {
+        <div class="modal fade show" style="display:block" aria-modal="true" role="dialog" @onclick="@ModalCancel">
+            <div class="modal-dialog modal-lg" @onclick:stopPropagation="true">
+                <div class="modal-content">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">@Details.GetType().ToString()</h4>
+                        <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            @foreach (var property in properties)
+                            {
+                                Type type = Type.GetType(property.PropertyType.AssemblyQualifiedName);
+
+                                <li class="list-group-item">
+                                    @if (isPropertyCollection(property))
+                                    {
+                                        var propertyList = property.GetValue(Details) as IEnumerable;
+                                        <p>
+                                            @property.Name : 
+                                            <TablePopup projectName="@projectName" Tables="propertyList?.Cast<object>().ToList()"></TablePopup>
+                                        </p>
+                                    }
+                                    else if (type.Module.Name.Contains(projectName))
+                                    {
+                                        <p>
+                                            @property.Name :
+                                            <DetailsPopup projectName="@projectName" Details="property.GetValue(Details)"></DetailsPopup>
+                                        </p>
+                                    }
+                                    else 
+                                    {
+                                        <p>
+                                            @property.Name : @nullCheck(property.GetValue(Details))
+                                        </p>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" @onclick="@ModalCancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <a>N/A</a>
+}
+
+@code {
+    [Parameter]
+    public object? Details { get; set; }
+
+    [Parameter]
+    public string projectName { get; set; }
+
+    PropertyInfo[] properties;
+
+    bool showModal = false;
+
+    void ModalShow() => showModal = true;
+    void ModalCancel() => showModal = false;
+    void ModalOk()
+    {
+        Console.WriteLine("Modal ok");
+        showModal = false;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Details == null) { return; }
+        if (firstRender)
+        {
+            properties = Details.GetType().GetProperties();
+
+            StateHasChanged();
+        }
+    }
+
+    private string nullCheck(object? str = null)
+    {
+        return str?.ToString() ?? "N/A";
+    }
+
+    private bool isPropertyCollection(PropertyInfo propertyInfo)
+    {
+        return (propertyInfo.PropertyType != typeof(string)
+            && propertyInfo.PropertyType.GetInterface(typeof(IEnumerable<>).Name) != null);
+    }
+}

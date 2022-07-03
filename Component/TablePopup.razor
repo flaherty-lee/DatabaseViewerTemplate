@@ -1,0 +1,110 @@
+﻿@using DatabaseViewerTemplate
+@using System.Text.Json
+@using System.Reflection
+
+@if(Tables != null && Tables.Count > 0)
+{
+    <button class="btn btn-primary btn-sm" @onclick="@ModalShow">@Tables[0].GetType().Name Details</button>
+    @if (showModal)
+    {
+        <div class="modal fade show" style="display:block" aria-modal="true" role="dialog" @onclick="@ModalCancel">
+            <div class="modal-dialog modal-fullscreen" @onclick:stopPropagation="true">
+                <div class="modal-content">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <button type="button" class="close" @onclick="@ModalCancel">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                            <h4>@Tables[0].GetType().FullName</h4>
+                        </button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="modal-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    @foreach (var property in @Tables[0].GetType().GetProperties().OrderBy(x => x.Name))
+                                    {
+                                        Type type = Type.GetType(property.PropertyType.AssemblyQualifiedName);
+                                        if (containsIdOrName(property))
+                                        {
+                                            <th scope="col">@property.Name</th>
+                                        }
+                                    }
+                                    <th>View Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var table in Tables)
+                                {
+                                    <tr>
+                                        @foreach (var property in @table.GetType().GetProperties().OrderBy(x => x.Name))
+                                        {
+                                            Type type = Type.GetType(property.PropertyType.AssemblyQualifiedName);
+                                            if (containsIdOrName(property))
+                                            {
+                                                <th>
+                                                    <p>
+                                                        @nullCheck(property.GetValue(table))
+                                                    </p>
+                                                </th>
+                                            }
+                                        }
+                                        <td><DetailsPopup Details="table" projectName="@projectName"></DetailsPopup></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <a>N/A</a>
+}
+
+@code {
+    [Parameter]
+    public List<object>? Tables { get; set; }
+
+    [Parameter]
+    public string? projectName { get; set; }
+
+    bool showModal = false;
+
+    void ModalShow() => showModal = true;
+    void ModalCancel() => showModal = false;
+    void ModalOk()
+    {
+        Console.WriteLine("Modal ok");
+        showModal = false;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Tables == null) { return; }
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+    }
+
+    private string nullCheck(object? str = null)
+    {
+        return str?.ToString() ?? "N/A";
+    }
+
+    private bool containsIdOrName(PropertyInfo property)
+    {
+        List<string> containString = new List<string>() { "id", "name" };
+        return containString.Any(s => property.Name.ToLower().Contains(s, StringComparison.InvariantCultureIgnoreCase));
+    }
+}
